@@ -1,59 +1,100 @@
+
 <!DOCTYPE html>
-<html lang="es">
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="index.css">
-    <title>APLICACIÓN DE CHAT MÍNIMA</title>
+<html>
+  <head>
+    <title>Chat en tiempo real</title>
 
-</head>
+    <style>
+      html {
+        color-scheme: dark light;
 
-<body>
-    <div class="container">
-        <p class="msg">Messages:</p>
-        <div id="messages" class="messages"></div>
-        <form id="msgForm" class="msgForm">
-            <input type="text" placeholder="Send message" class="input" id="inputBox" />
-            <input type="submit" class="btn" value="Send">
-        </form>
+        height: 100vh;
+
+        display: grid;
+
+        place-content: center;
+      }
+
+      #chat-box {
+        width: 300px;
+
+        height: 400px;
+
+        border: 1px solid #ccc;
+
+        padding: 5px;
+
+        margin: 0 auto;
+
+        overflow-y: auto;
+
+        margin-bottom: 15px;
+      }
+
+      #form {
+        display: flex;
+
+        justify-content: center;
+
+        max-width: 300px;
+
+        margin: auto;
+      }
+
+      #input {
+        flex-grow: 1;
+
+        margin-right: 10px;
+      }
+
+      #chat-box {
+        border-radius: 25px;
+      }
+
+      #messages {
+        font-size: 16px;
+      }
+
+      #messages li {
+        list-style: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="chat-box">
+      <ul id="messages"></ul>
     </div>
-    <script>
-        // const ws = new WebSocket(`ws://${window.document.location.host}`);
-        const ws = new WebSocket(`https://chat-servidor-1.onrender.com/`);
-        ws.binaryType = "blob";
-        // COMUNICAR APERTURA Y CIERRE DEL SOCKET
-        ws.addEventListener("open", event => {
-            console.log("Websocket conexión abierta!");
-        });
-        ws.addEventListener("close", event => {
-            console.log("Websocket conexión cerrada!");
-        });
-        ws.onmessage = function (message) {
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('msgCtn');
-            if (message.data instanceof Blob) {
-                reader = new FileReader();
-                reader.onload = () => {
-                    msgDiv.innerHTML = reader.result;
-                    document.querySelector('#messages').appendChild(msgDiv);
-                };
-                reader.readAsText(message.data);
-            } else {
-                console.log("Result2: " + message.data);
-                msgDiv.innerHTML = message.data;
-                document.querySelector('#messages').appendChild(msgDiv);
-            }
-        }
-        const form = document.querySelector('#msgForm');
-        form.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const message = document.querySelector('#inputBox').value;
-            ws.send(message);
-            document.querySelector('#inputBox').value = ''
-        })
-    </script>
-</body>
 
+    <form id="form">
+      <input id="input" autocomplete="off" />
+
+      <button>ENVIAR</button>
+    </form>
+
+    <script src="https://cdn.socket.io/4.1.2/socket.io.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+      $(function () {
+        const socket = io("https://backchatnodepractica.onrender.com/");
+
+        $("#form").submit(function (event) {
+          event.preventDefault();
+
+          socket.emit("Mensaje de chat", $("#input").val());
+
+          $("#input").val("");
+        });
+
+        socket.on("Mensaje de chat", function (msg) {
+          $("#messages").append($("<li>").text(msg));
+
+          $("#chat-box").scrollTop($("#chat-box")[0].scrollHeight);
+        });
+      });
+    </script>
+  </body>
 </html>
